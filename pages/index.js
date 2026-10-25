@@ -182,10 +182,25 @@ export default function Home() {
       const endpoint = mode === 'search' || isSearchInput(trimmed) ? '/api/search' : '/api/playlist';
       const queryKey = endpoint === '/api/search' ? 'query' : 'url';
       const response = await fetch(`${endpoint}?${queryKey}=${encodeURIComponent(trimmed)}`);
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let data;
+
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        if (text.trim().startsWith('<')) {
+          throw new Error('Server returned HTML (likely an error page). Try again in a moment.');
+        }
+        try {
+          data = JSON.parse(text);
+        } catch {
+          throw new Error('Unexpected response from server');
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch the playlist');
+        throw new Error(data?.error || 'Failed to fetch the playlist');
       }
 
       setPlaylist(data);
