@@ -1,43 +1,75 @@
-# YouTube Fetch Concept
+# 🎵 YouTube Fetch Concept
 
-Paste a YouTube playlist link (or search by name) and get every item back as a
-song row, with one-click audio and video downloads.
+> Paste a YouTube playlist link (or just search by name) and get every item back as a song row — with one-click audio & video downloads.
 
-## Running it
+[![Next.js](https://img.shields.io/badge/Next.js-13.5.4-black?logo=next.js)](https://nextjs.org)
+[![No API Key](https://img.shields.io/badge/YouTube_API-Not_Required-green)]()
+[![License](https://img.shields.io/badge/license-MIT-blue)]()
+
+---
+
+## ✨ What it does
+
+- 🔍 **Search by name** or **paste a playlist URL** — works with regular playlists, search results, and even YouTube's auto-generated "Mix" (RD…) radios.
+- 📋 **Every item becomes a row** with thumbnail, channel, views, duration, and published date.
+- ⬇️ **One-click downloads** — audio (192 kbps MP3) or video (MP4, 720p cap) for any single song.
+- 📦 **Bulk ZIP downloads** — grab the whole playlist as one archive, with one unavailable video skipped instead of failing everything.
+- 📊 **Live progress** — per-song ticks, running-song highlight, monotonic overall bar, cancel anytime.
+- ✅ **Row selection** — pick specific songs and download just those.
+- 📱 **Mobile-first** — responsive ladder from 380px phones up to wide desktops.
+- ♾️ **Infinite scroll** — rows load more as you scroll down.
+- 🔑 **No YouTube Data API key** — scrapes the public page + continuation tokens.
+
+---
+
+## 🚀 Running it
 
 ```bash
 npm install
 npm run dev        # http://localhost:3000
 ```
 
-## How it works
+Build for production:
 
-No YouTube Data API key is required. The app reads the public playlist or
-search page, pulls the embedded `ytInitialData` JSON out of the HTML, and then
-follows YouTube's own continuation tokens to page through the rest of the list.
-
-```text
-pages/index.js               UI — search/playlist toggle, song rows, download buttons
-pages/api/playlist.ts        API route — GET  /api/playlist?url=<playlist url>
-pages/api/search.ts          API route — GET  /api/search?query=<name>
-pages/api/download/start.ts  API route — POST /api/download/start
-pages/api/download/status.ts API route — GET  /api/download/status?jobId=
-pages/api/download/file.ts   API route — GET  /api/download/file?jobId=
-pages/api/download/cancel.ts API route — POST /api/download/cancel?jobId=
-lib/youtube.ts               Playlist + search fetching and parsing
-lib/download-jobs.ts         Background download jobs (yt-dlp), on-disk state
-lib/download-client.js       Browser helper: start -> poll -> download
-lib/download-utils.js        Filename sanitising (shared by server and tests)
-lib/search-utils.js          Input classification (URL vs. search term)
-lib/pagination-utils.js      Page slicing + page-number strip (shared by UI and tests)
-styles/globals.css           Dark theme, song rows, progress bars, pagination
+```bash
+npm run build
+npm run start
 ```
 
-### API
+> ⚠️ **GitHub Pages won't work** — this app needs server-side API routes.
+> Deploy to [Vercel](https://vercel.com) (one-click) or any Node host instead.
 
-```text
-GET /api/playlist?url=https://www.youtube.com/playlist?list=PL...
-GET /api/search?query=hulvey
+---
+
+## 🏗️ How it works
+
+No YouTube Data API key required. The app reads the public playlist/search page, pulls the embedded `ytInitialData` JSON out of the HTML, then follows YouTube's own continuation tokens to page through the rest.
+
+```
+pages/index.js               UI — search/playlist toggle, song rows, downloads
+pages/api/playlist.ts        GET  /api/playlist?url=...
+pages/api/search.ts          GET  /api/search?query=...
+pages/api/download/start.ts  POST /api/download/start
+pages/api/download/status.ts GET  /api/download/status?jobId=
+pages/api/download/file.ts   GET  /api/download/file?jobId=
+pages/api/download/cancel.ts POST /api/download/cancel?jobId=
+lib/youtube.ts               Playlist + search fetching & parsing
+lib/download-jobs.ts         Background download jobs (yt-dlp), on-disk state
+lib/download-client.js       Browser helper: start → poll → download
+lib/download-utils.js        Filename sanitising (shared by server & tests)
+lib/search-utils.js          Input classification (URL vs search term)
+lib/pagination-utils.js      Page slicing + page-number strip
+lib/batch-utils.js           Per-song list helpers (markers, windowing)
+styles/globals.css           Dark theme, song rows, progress, responsive
+```
+
+---
+
+## 📡 API
+
+```
+GET  /api/playlist?url=https://www.youtube.com/playlist?list=PL...
+GET  /api/search?query=hulvey
 ```
 
 ```jsonc
@@ -63,8 +95,7 @@ GET /api/search?query=hulvey
 }
 ```
 
-Search results use the same shape, with `"isSearch": true` and a synthetic
-`playlistId` of `search:<query>`.
+Search results use the same shape with `"isSearch": true` and a synthetic `playlistId` of `search:<query>`.
 
 ### Accepted inputs
 
@@ -74,25 +105,13 @@ Search results use the same shape, with `"isSearch": true` and a synthetic
 - A bare video URL — resolves to that video's playlist/mix
 - Any name ("hulvey") — switches to search mode
 
-### Mix (radio) playlists
+---
 
-YouTube's auto-generated mixes (`RD…`, e.g. `RDdUVs5Ocou8I`) are supported too:
+## 🎧 Downloads
 
-- `https://youtube.com/playlist?list=RDdUVs5Ocou8I`
-- `https://www.youtube.com/watch?v=dUVs5Ocou8I&list=RDdUVs5Ocou8I`
+Downloads run as **background jobs** with live progress instead of one long request.
 
-These need a different source: YouTube answers the mix's playlist page with
-*"This playlist type is unviewable."*, so the items are read from the mix rail
-on the watch page instead. A mix is randomised per request, so the exact list
-(and its order) can differ between loads. Mixes are finite — there is no
-continuation endpoint for them, so you get the ~20 videos YouTube suggests.
-
-## Downloads
-
-Downloads run as **background jobs** with live progress, rather than as one
-long request.
-
-```text
+```
 POST /api/download/start           { videoId | url | playlistId, title, format, limit? }
   -> 202 { jobId, status, count? }
 
@@ -101,32 +120,22 @@ GET  /api/download/file?jobId=     -> the file, as an attachment
 POST /api/download/cancel?jobId=   -> { cancelled }
 ```
 
-`items` is only present for a batch job. It holds one entry per song:
-`{ id, title, state, percent, bytes?, error? }`, where `state` is one of
-`pending`, `downloading`, `processing`, `done` or `skipped`.
+`items` is only present for batch jobs — one entry per song:
+`{ id, title, state, percent, bytes?, error? }`, where `state` ∈ `pending | downloading | processing | done | skipped`.
 
-`format` is `audio` (192 kbps MP3) or `video` (MP4, capped at 720p). `limit`
-caps how many playlist items a batch job downloads.
+`format` = `audio` (192 kbps MP3) or `video` (MP4, ≤720p). `limit` caps how many playlist items a batch downloads.
 
-The browser starts a job, polls the status endpoint every 700 ms, shows a
-progress bar on the row, and then triggers a normal browser download once the
-file is ready. The file is served as an `attachment`, so it streams straight to
-disk — a 200 MB video never sits in memory or in a blob.
+The browser starts a job, polls every 700 ms, shows a progress bar on the row, then triggers a native browser download once the file is ready. Files are served as `attachment`s — a 200 MB video never sits in memory or a blob.
 
-A running job can be cancelled from the UI, which kills the yt-dlp process and
-discards the partial files.
+A running job can be cancelled from the UI, which kills the yt-dlp process and discards partial files.
 
-**Playlist mode** (`playlistId` set) downloads every item into a ZIP archive.
-One unavailable video is skipped rather than failing the whole batch, and the
-final message reports how many of the total were retrieved.
+**Playlist mode** downloads every item into a ZIP. One unavailable video is skipped rather than failing the whole batch, and the final message reports how many of the total were retrieved.
 
-### The per-song list
+### 🎵 The per-song list
 
-A batch can cover hundreds of songs, so a single percentage bar says very
-little about what is happening. While a batch runs, the UI shows the whole
-queue of songs and ticks them off one by one:
+A batch can cover hundreds of songs, so a single percentage bar says very little. While a batch runs, the UI shows the whole queue and ticks songs off one by one:
 
-```text
+```
 ●  Please, Just Drive Me Home"—Tired Nurse…      Downloading 24%
 ✓  indie tribe - ROB HELL (Official Music Video)  Done
 ✓  Hulvey, Torey D'Shaun, Alex Jean — Love Like…  Done
@@ -135,107 +144,82 @@ queue of songs and ticks them off one by one:
 
 | Marker | Meaning |
 | --- | --- |
-| `●` | The song being downloaded or converted right now |
-| `✓` | The song finished and is in the ZIP |
-| `✕` | The song was unavailable and was skipped |
-| `○` | The song is still queued |
+| `●` | The song being downloaded/converted right now |
+| `✓` | Finished and in the ZIP |
+| `✕` | Unavailable and skipped |
+| `○` | Still queued |
 
-The song that is running right now also gets its own line above the list, with
-its own percentage, so it is never scrolled out of sight.
+The running song also gets its own line above the list with its own percentage, so it's never scrolled out of sight.
 
-The list comes from the server: `runBatch` keeps one entry per song and
-publishes it in the job status. The per-song list is written to its own file
-(`<jobId>.items.json`) rather than into the main state file, so the status
-route stays cheap to poll no matter how long the playlist is. Progress
-updates are throttled to one write every 400 ms; a state change (a song
-finishing, being skipped, or the next one starting) is written straight away.
+The per-song list comes from the server: `runBatch` keeps one entry per song and publishes it in the job status. It's written to its own file (`<jobId>.items.json`) so the status route stays cheap to poll no matter how long the playlist is. Progress updates are throttled to one write every 400 ms; state changes (finish/skip/start) write immediately.
 
-The overall bar is **monotonic** — it never moves backwards. Each song owns a
-slice of the bar (`100 / songCount` percent) and every phase of that song
-stays inside its slice, so the bar creeps forward steadily instead of
-jumping to 99% and back to 0% at every song boundary.
+The overall bar is **monotonic** — it never moves backward. Each song owns a slice (`100 / songCount` %) and every phase of that song stays inside its slice, so the bar creeps forward steadily instead of jumping to 99% and back to 0% at every song boundary.
 
-`lib/batch-utils.js` holds the pure helpers the UI shares with the unit
-tests: the markers, the state labels, the counts and the windowing that keeps
-a 500-song list from re-rendering in full on every poll.
+`lib/batch-utils.js` holds the pure helpers the UI shares with the unit tests: markers, state labels, counts, and the windowing that keeps a 500-song list from re-rendering in full on every poll.
 
-### Why it is built this way
+### Why it's built this way
 
-The first implementation did the whole download inside a single API request and
-only then started sending bytes. That produced two visible problems: the
-browser sat on a blank page for minutes with no feedback, and any failure
-dumped the user onto a raw JSON error page that looked like "nothing
-downloaded".
+The first implementation did the whole download inside a single API request and only then started sending bytes. Two visible problems: the browser sat on a blank page for minutes with no feedback, and any failure dumped the user onto a raw JSON error page that looked like "nothing downloaded."
 
-Two further details are worth knowing if you change this code:
+Two further details worth knowing if you change this code:
 
-- **Job state lives on disk**, in `<tmp>/youtube-fetch-concept/jobs/`. Next.js
-  compiles every API route into its own bundle, so an in-memory `Map` is not
-  shared between `/api/download/start`, `/api/download/status` and
-  `/api/download/file` — the status route would answer 404 for a job it never
-  heard of.
-- **Every job gets its own directory**, and every item of a batch gets its own
-  sub-directory. A shared directory plus stem-prefix matching once let a video
-  job pick up a leftover `.m4a` from a previous audio job.
+- **Job state lives on disk**, in `<tmp>/youtube-fetch-concept/jobs/`. Next.js compiles every API route into its own bundle, so an in-memory `Map` isn't shared between `/api/download/start`, `/api/download/status`, and `/api/download/file` — the status route would answer 404 for a job it never heard of.
+- **Every job gets its own directory**, and every batch item gets its own sub-directory. A shared directory plus stem-prefix matching once let a video job pick up a leftover `.m4a` from a previous audio job.
 
-YouTube also blocks some public videos for yt-dlp's default player client
-(`HTTP Error 403: Forbidden`). `lib/download-jobs.ts` retries the same URL with
-alternate player clients (`android`, `ios`, `tv`, `web_safari`) before giving
-up.
+YouTube also blocks some public videos for yt-dlp's default player client (`HTTP Error 403: Forbidden`). `lib/download-jobs.ts` retries the same URL with alternate player clients (`android`, `ios`, `tv`, `web_safari`) before giving up.
 
-## Responsive layout
+---
 
-The page is built mobile-first and adapts in `styles/globals.css`:
+## 🎧 Mix (radio) playlists
+
+YouTube's auto-generated mixes (`RD…`, e.g. `RDdUVs5Ocou8I`) are supported too:
+
+- `https://youtube.com/playlist?list=RDdUVs5Ocou8I`
+- `https://www.youtube.com/watch?v=dUVs5Ocou8I&list=RDdUVs5Ocou8I`
+
+These need a different source: YouTube answers the mix's playlist page with *"This playlist type is unviewable."*, so the items are read from the mix rail on the watch page instead. A mix is randomized per request, so the exact list (and order) can differ between loads. Mixes are finite — no continuation endpoint — so you get the ~20 videos YouTube suggests.
+
+---
+
+## 📱 Responsive layout
+
+Built mobile-first, adapting in `styles/globals.css`:
 
 | Width | Layout |
 | --- | --- |
 | > 900px | Three columns: 180px thumbnail · title · 190px action stack |
 | ≤ 900px | Tracks shrink to 148px / 168px so the title keeps a readable column |
-| ≤ 720px | Actions move under the title and span the full row; buttons sit side by side |
-| ≤ 560px | Compact list: a 120px poster beside the title, 44px touch targets |
-| ≤ 380px | Poster shrinks to 96px and the type scales down |
+| ≤ 720px | Actions move under the title and span the full row; buttons side by side |
+| ≤ 560px | Compact list: 120px poster beside the title, 44px touch targets |
+| ≤ 380px | Poster shrinks to 96px and type scales down |
 
-Other details worth knowing:
+Other details:
 
-- The thumbnail is always 16:9, either from a fixed height or from
-  `padding-bottom: 56.25%` on phones (a percentage height would collapse).
-- The two fixed grid tracks live in the `--thumb-w` / `--actions-w` custom
-  properties on `.song-row`, so a breakpoint only overrides two numbers.
-- `@media (pointer: coarse)` raises hit areas to 44px on touch devices, and
-  `@media (prefers-reduced-motion: reduce)` disables the hover lift and the
-  progress-bar transition.
-- The container respects `env(safe-area-inset-*)` so notched phones do not clip
-  content.
+- Thumbnail is always 16:9 (fixed height on desktop, `padding-bottom: 56.25%` on phones).
+- The two fixed grid tracks live in `--thumb-w` / `--actions-w` custom properties on `.song-row`, so a breakpoint only overrides two numbers.
+- `@media (pointer: coarse)` raises hit areas to 44px on touch devices.
+- `@media (prefers-reduced-motion: reduce)` disables the hover lift and progress-bar transition.
+- Container respects `env(safe-area-inset-*)` so notched phones don't clip content.
 
-At 360px a song row is about 158px tall instead of the 407px it used to be
-when the thumbnail spanned the full width.
+At 360px a song row is ~158px tall instead of the 407px it used to be when the thumbnail spanned the full width.
 
-The batch song list follows the same ladder: the scroll window shrinks from
-260px to 200px on a phone, and the running song's title is clamped to two
-lines so a long name cannot push the list off the screen.
+The batch song list follows the same ladder: scroll window shrinks from 260px to 200px on a phone, and the running song's title clamps to two lines so a long name can't push the list off-screen.
 
-## Pagination
+---
 
-The song rows are paginated. The default is **10 rows per page**, and the
-"Rows" selector offers 10, 20 and 50 — never fewer than 10.
-
-Pagination is done in the browser, not on the server: `/api/playlist` and
-`/api/search` already return every item, so there is no need to ask YouTube
-for one page at a time. `lib/pagination-utils.js` holds the pure helpers
-(`paginate`, `buildPageList`) that the UI and the unit tests share.
-
-The page-number strip always shows the first and last page plus the current
-page and its neighbours, with `…` marking the gaps (e.g. `1 … 6 7 8 … 25`).
-Changing the page scrolls the list back into view, and changing the page size
-returns to page 1.
-
-The "Rows per page" selector stays visible even when everything fits on a
-single page — otherwise picking a large size would remove the control and
-strand you on it.
-
-## Tests
+## 🧪 Tests
 
 ```bash
+npm test
+```
+
+Unit tests cover `lib/pagination-utils.js`, `lib/batch-utils.js`, `lib/search-utils.js`, `lib/download-utils.js`, and `lib/download-client.js`.
+
+---
+
+## 📄 License
+
+MIT — do whatever you want with it. A ⭐ on GitHub is appreciated but not required.
 node --test lib/download-utils.test.js lib/search-utils.test.js lib/download-client.test.js lib/pagination-utils.test.js lib/batch-utils.test.js
 ```
 
