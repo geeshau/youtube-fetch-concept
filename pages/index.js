@@ -272,11 +272,29 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>YouTube Playlist Fetcher</title>
+        <title>YouTube Playlist Fetcher — Download Audio & Video from Any Playlist</title>
         <meta
           name="description"
-          content="Paste a YouTube playlist link and get every video as a song row."
+          content="Paste a YouTube playlist link or search by name. Get every video as a song row with one-click audio (MP3) and video (MP4) downloads, bulk ZIP export, live progress, and infinite scroll. No API key required."
         />
+        <meta name="keywords" content="youtube playlist downloader, download youtube playlist, youtube to mp3, youtube to mp4, bulk youtube download, playlist audio download" />
+        <meta name="robots" content="index, follow" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="canonical" href="https://youtube-fetch-concept.vercel.app/" />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="YouTube Playlist Fetcher — Download Audio & Video" />
+        <meta property="og:description" content="Paste a playlist link or search by name. Download every video as audio or video, with live progress and bulk ZIP export. No API key needed." />
+        <meta property="og:url" content="https://youtube-fetch-concept.vercel.app/" />
+        <meta property="og:site_name" content="YouTube Playlist Fetcher" />
+        <meta property="og:image" content="https://youtube-fetch-concept.vercel.app/og-image.png" />
+
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="YouTube Playlist Fetcher — Download Audio & Video" />
+        <meta name="twitter:description" content="Paste a playlist link or search by name. Download every video as audio or video, with live progress and bulk ZIP export." />
+        <meta name="twitter:image" content="https://youtube-fetch-concept.vercel.app/og-image.png" />
       </Head>
 
       <main className="container">
