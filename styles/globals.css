@@ -1,15 +1,15 @@
 :root {
-  --bg: #000000;
-  --surface: #0a0a0a;
-  --surface-2: #141414;
-  --border: #262b35;
-  --text: #e8eaed;
-  --muted: #9aa0a6;
-  --accent: #3ea6ff;
-  --success: #5fd39a;
-  --danger-bg: #2a1618;
-  --danger-border: #5c2a2f;
-  --danger-text: #ff9aa2;
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f4f5f6;
+  --border: #e0e3e6;
+  --text: #17191c;
+  --muted: #626970;
+  --accent: #176fa8;
+  --success: #238253;
+  --danger-bg: #fff0f1;
+  --danger-border: #e5b6bb;
+  --danger-text: #a52c39;
 }
 
 * {
@@ -35,24 +35,150 @@ body {
   /* Respect the notch on notched phones. */
   padding: clamp(12px, 4vw, 40px) max(clamp(12px, 3vw, 20px), env(safe-area-inset-left)) clamp(32px, 6vw, 64px);
 }
-
 /* ---------- Header ---------- */
 
 .masthead {
   text-align: center;
-  margin-bottom: 32px;
+  margin: 0 0 20px;
 }
 
 .masthead h1 {
   margin: 0 0 8px;
-  font-size: clamp(22px, 4.5vw, 30px);
-  letter-spacing: -0.02em;
+  max-width: 760px;
+  font-size: 46px;
+  line-height: 1.04;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+  margin-inline: auto;
+}
+
+.masthead h1 span {
+  display: block;
+  color: #171717;
 }
 
 .masthead p {
   margin: 0;
-  color: var(--muted);
-  font-size: clamp(13.5px, 2.4vw, 15px);
+  color: #666;
+  max-width: 560px;
+  margin-inline: auto;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100vw;
+  min-height: 0;
+  margin: 0 0 28px calc(50% - 50vw);
+  padding: 44px max(16px, env(safe-area-inset-left)) 28px;
+  border-bottom: 1px solid #e8e8e8;
+  background-color: #fff;
+  color: #171717;
+}
+
+.hero-copy {
+  width: 100%;
+  max-width: 760px;
+  text-align: center;
+}
+
+.hero-kicker {
+  margin: 0 0 12px;
+  color: #d46b36;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.hero-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: min(100%, 1120px);
+  min-height: 190px;
+  padding: 12px 24px 4px;
+  perspective: 1100px;
+  overflow: hidden;
+}
+
+.hero-poster {
+  position: relative;
+  flex: 0 1 15%;
+  aspect-ratio: 4 / 5;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #ececec;
+  border-radius: 7px;
+  background: #eee;
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.16);
+  transform-style: preserve-3d;
+}
+
+.hero-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-poster-1 { transform: rotateY(30deg) scale(0.94); }
+.hero-poster-2 { transform: rotateY(23deg) scale(0.98); }
+.hero-poster-3 { transform: rotateY(14deg); }
+.hero-poster-4 { transform: translateY(-7px) scale(1.08); z-index: 1; }
+.hero-poster-5 { transform: rotateY(-14deg); }
+.hero-poster-6 { transform: rotateY(-23deg) scale(0.98); }
+.hero-poster-7 { transform: rotateY(-30deg) scale(0.94); }
+
+.hero .search-form {
+  max-width: 680px;
+  margin: 22px auto 0;
+}
+
+.hero .mode-toggle {
+  justify-content: center;
+}
+
+.hero .mode-toggle button {
+  color: #333;
+  border-color: #dedede;
+  background: #f7f7f7;
+}
+
+.hero .mode-toggle button.active {
+  color: white;
+  background: #191919;
+}
+
+.hero .search-controls {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.hero .search-form input {
+  color: #1b1b1b;
+  border-color: #d7d7d7;
+  background: #fff;
+}
+
+.hero .search-form input::placeholder {
+  color: #777;
+}
+
+.hero .search-form input:focus {
+  border-color: #d46b36;
+  box-shadow: 0 0 0 3px rgba(212, 107, 54, 0.16);
+}
+
+.hero .search-form button[type='submit'] {
+  color: #fff;
+  background: #d46b36;
 }
 
 /* ---------- Search form ---------- */
@@ -61,8 +187,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 720px;
-  margin: 0 auto 24px;
+  max-width: 680px;
+  margin: 0 0 0;
 }
 
 .search-controls {
@@ -159,6 +285,23 @@ body {
   color: var(--muted);
   background: var(--surface);
   border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.loading-triangle {
+  display: inline-block;
+  color: var(--accent);
+  font-size: 13px;
+  animation: loading-triangle-spin 1s linear infinite;
+}
+
+@keyframes loading-triangle-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ---------- Playlist summary ---------- */
@@ -217,28 +360,23 @@ body {
 /* ---------- Card grid ---------- */
 
 .song-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 980px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
 .song-row {
-  /* The two fixed tracks are the only things that need to change per
-     breakpoint, so they live in variables. */
-  --thumb-w: 180px;
-  --actions-w: 190px;
-
-  display: grid;
-  grid-template-columns: var(--thumb-w) minmax(0, 1fr) var(--actions-w);
-  grid-template-areas: 'thumb main actions';
-  gap: 16px;
-  align-items: center;
-  padding: 12px 14px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 8px;
   transition: border-color 0.15s, transform 0.15s;
 }
 
@@ -247,15 +385,35 @@ body {
   transform: translateY(-1px);
 }
 
+.song-select {
+  position: absolute;
+  z-index: 2;
+  top: 20px;
+  left: 20px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.78);
+  cursor: pointer;
+}
+
+.song-select input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
 .song-thumb {
-  grid-area: thumb;
   position: relative;
   display: block;
-  width: var(--thumb-w);
-  /* 16:9 keeps every thumbnail in the same proportion as YouTube's. */
-  height: calc(var(--thumb-w) * 0.5625);
+  width: 100%;
+  aspect-ratio: 16 / 9;
   background: var(--surface-2);
-  border-radius: 10px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -283,14 +441,20 @@ body {
 }
 
 .song-main {
-  grid-area: main;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .song-title {
   display: block;
+  display: -webkit-box;
+  min-height: 2.7em;
   margin: 0 0 8px;
-  font-size: clamp(14.5px, 2.6vw, 16px);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1.35;
   color: var(--text);
@@ -334,17 +498,24 @@ body {
 }
 
 .song-actions {
-  grid-area: actions;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
-  width: var(--actions-w);
+  width: 100%;
   min-width: 0;
+  margin-top: auto;
 }
 
 .song-actions > button {
-  /* Comfortable touch target on phones without making the desktop row tall. */
+  flex: 1 1 calc(50% - 8px);
+  min-width: 0;
   min-height: 34px;
+}
+
+.song-actions .row-progress {
+  flex: 1 1 100%;
+  min-width: 0;
 }
 
 /* ---------- Download progress ---------- */
@@ -425,6 +596,14 @@ body {
   cursor: pointer;
   white-space: nowrap;
   transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.progress-cancel {
+  align-self: flex-end;
+  margin-left: 0;
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: 6px;
 }
 
 .cancel-button:hover {
@@ -734,9 +913,16 @@ body {
 
 /* ---------- Responsive ---------- */
 
-/* Medium screens (tablets, small laptops): shrink the fixed tracks so the
-   title keeps a readable column instead of being squeezed. */
+/* Medium screens (tablets, small laptops). */
 @media (max-width: 900px) {
+  .song-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .masthead h1 {
+    font-size: 40px;
+  }
+
   .song-row {
     --thumb-w: 148px;
     --actions-w: 168px;
@@ -755,17 +941,22 @@ body {
   }
 }
 
-/* Below this the three tracks no longer fit, so the actions move under the
-   title and the row becomes a two-track grid. */
+/* Compact the hero artwork and card grid on smaller screens. */
 @media (max-width: 720px) {
-  .song-row {
-    --thumb-w: 120px;
-    --actions-w: 100%;
-    grid-template-columns: var(--thumb-w) minmax(0, 1fr);
-    grid-template-areas:
-      'thumb main'
-      'actions actions';
-    align-items: start;
+  .hero {
+    gap: 24px;
+    padding-top: 32px;
+    padding-bottom: 28px;
+  }
+
+  .hero-copy {
+    max-width: 620px;
+  }
+
+  .hero-art {
+    width: 100%;
+    min-height: 160px;
+    margin: 0 auto;
   }
 
   .cancel-button {
@@ -773,27 +964,67 @@ body {
     padding: 6px 12px;
   }
 
-  .song-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: center;
-    width: 100%;
-  }
-
   .song-actions > button {
-    flex: 1 1 auto;
     min-height: 40px;
   }
 
-  /* The progress block spans the full row underneath the buttons. */
-  .song-actions .row-progress {
-    flex: 1 1 100%;
-  }
 }
 
-/* Phones: a compact list. The thumbnail stays beside the title (a small
-   poster, not a full-width hero image) so far more rows fit on screen. */
+/* Phones: keep the artwork short and show a centered three-image crop. */
 @media (max-width: 560px) {
+  .song-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .hero {
+    gap: 18px;
+    margin-bottom: 22px;
+    padding-top: 24px;
+    padding-bottom: 20px;
+  }
+
+  .hero-kicker {
+    margin-bottom: 12px;
+    font-size: 10px;
+  }
+
+  .masthead {
+    margin-bottom: 18px;
+  }
+
+  .masthead h1 {
+    max-width: 440px;
+    font-size: 36px;
+  }
+
+  .masthead p {
+    font-size: 14px;
+  }
+
+  .hero-art {
+    min-height: 126px;
+    gap: 6px;
+    padding: 8px 10px 4px;
+    transform: none;
+  }
+
+  .hero-poster {
+    flex-basis: 30%;
+    aspect-ratio: 4 / 5;
+  }
+
+  .hero-poster-1,
+  .hero-poster-2,
+  .hero-poster-6,
+  .hero-poster-7 {
+    display: none;
+  }
+
+  .hero-poster-3 { transform: rotateY(12deg) scale(0.94); }
+  .hero-poster-4 { transform: translateY(-4px) scale(1.03); }
+  .hero-poster-5 { transform: rotateY(-12deg) scale(0.94); }
+
   .search-controls {
     flex-direction: column;
   }
@@ -836,31 +1067,11 @@ body {
     min-width: 44px;
   }
 
-  .song-row {
-    --thumb-w: 120px;
-    grid-template-columns: var(--thumb-w) minmax(0, 1fr);
-    grid-template-areas:
-      'thumb main'
-      'actions actions';
-    gap: 10px 12px;
-    padding: 10px;
-  }
-
-  .song-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
   .song-actions > button {
-    flex: 1 1 0;
     min-width: 0;
     min-height: 48px;
     padding: 10px 12px;
     font-size: 13px;
-  }
-
-  .song-actions .row-progress {
-    flex: 1 1 100%;
   }
 
   /* Make Cancel a real touch target, even when the browser reports a
@@ -933,8 +1144,8 @@ body {
 /* Very small phones: shrink the poster a little more so the title keeps a
    usable column. */
 @media (max-width: 380px) {
-  .song-row {
-    --thumb-w: 96px;
+  .masthead h1 {
+    font-size: 32px;
   }
 
   .song-title {

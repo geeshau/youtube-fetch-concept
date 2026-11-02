@@ -36,6 +36,7 @@ export default function Home() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [selected, setSelected] = useState(new Set());
   const [visibleCount, setVisibleCount] = useState(DEFAULT_PAGE_SIZE);
+  const [rowQuery, setRowQuery] = useState('');
   const sentinelRef = useRef(null);
 
   // Per-download state keyed by `${videoId}:${format}`.
@@ -256,11 +257,22 @@ export default function Home() {
 
   const videos = playlist?.videos ?? [];
 
+  // Fuzzy-ish row filter: case-insensitive substring match on title/channel.
+  const filteredVideos = useMemo(() => {
+    const q = rowQuery.trim().toLowerCase();
+    if (!q) return videos;
+    return videos.filter((v) => {
+      const hay = `${v.title || ''} ${v.channel || ''}`.toLowerCase();
+      // Allow partial matches: every token of the query must appear somewhere.
+      return q.split(/\s+/).every((tok) => hay.includes(tok));
+    });
+  }, [videos, rowQuery]);
+
   // The visible slice of rows for the current page. With infinite scroll we
   // reveal `visibleCount` rows at once, growing it as the user scrolls.
   const current = useMemo(
-    () => paginate(videos, 1, visibleCount),
-    [videos, visibleCount]
+    () => paginate(filteredVideos, 1, visibleCount),
+    [filteredVideos, visibleCount]
   );
 
   const pageNumbers = useMemo(
@@ -341,46 +353,75 @@ export default function Home() {
       </Head>
 
       <main className="container">
-        <header className="masthead">
-          <h1>YouTube Playlist Fetcher</h1>
-          <p>Paste a playlist link and every item shows up as a song row.</p>
-        </header>
+        <section className="hero" aria-labelledby="hero-title">
+          <div className="hero-copy">
+            <p className="hero-kicker">Behind the playlist</p>
+            <header className="masthead">
+              <h1 id="hero-title">YouTube Playlist <span>Fetcher</span></h1>
+              <p>Find the tracks, explore the mix, and keep every download together.</p>
+            </header>
 
-        <form className="search-form" onSubmit={handleFetch}>
-          <div className="mode-toggle" role="tablist" aria-label="Fetch mode">
-            <button
-              type="button"
-              className={mode === 'playlist' ? 'active' : ''}
-              onClick={() => setMode('playlist')}
-            >
-              Playlist URL
-            </button>
-            <button
-              type="button"
-              className={mode === 'search' ? 'active' : ''}
-              onClick={() => setMode('search')}
-            >
-              Search by name
-            </button>
+            <form className="search-form" onSubmit={handleFetch}>
+              <div className="mode-toggle" role="tablist" aria-label="Fetch mode">
+                <button
+                  type="button"
+                  className={mode === 'playlist' ? 'active' : ''}
+                  onClick={() => setMode('playlist')}
+                >
+                  Playlist URL
+                </button>
+                <button
+                  type="button"
+                  className={mode === 'search' ? 'active' : ''}
+                  onClick={() => setMode('search')}
+                >
+                  Search by name
+                </button>
+              </div>
+
+              <div className="search-controls">
+                <input
+                  type="text"
+                  placeholder={
+                    mode === 'search'
+                      ? 'Search YouTube by song, artist, or video title'
+                      : 'https://www.youtube.com/playlist?list=PL...'
+                  }
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  aria-label={mode === 'search' ? 'YouTube search query' : 'YouTube playlist URL'}
+                />
+                <button type="submit" disabled={loading}>
+                  {loading ? 'Fetching…' : 'Fetch'}
+                </button>
+              </div>
+            </form>
           </div>
 
-          <div className="search-controls">
-            <input
-              type="text"
-              placeholder={
-                mode === 'search'
-                  ? 'Search YouTube by song, artist, or video title'
-                  : 'https://www.youtube.com/playlist?list=PL...'
-              }
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              aria-label={mode === 'search' ? 'YouTube search query' : 'YouTube playlist URL'}
-            />
-            <button type="submit" disabled={loading}>
-              {loading ? 'Fetching…' : 'Fetch'}
-            </button>
+          <div className="hero-art" aria-hidden="true">
+            <div className="hero-poster hero-poster-1">
+              <img src="https://i.ytimg.com/vi/fJ9rUzIMcZQ/hqdefault.jpg" alt="" />
+            </div>
+            <div className="hero-poster hero-poster-2">
+              <img src="https://i.ytimg.com/vi/4NRXx6U8ABQ/hqdefault.jpg" alt="" />
+            </div>
+            <div className="hero-poster hero-poster-3">
+              <img src="https://i.ytimg.com/vi/DyDfgMOUjCI/hqdefault.jpg" alt="" />
+            </div>
+            <div className="hero-poster hero-poster-4">
+              <img src="https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg" alt="" />
+            </div>
+            <div className="hero-poster hero-poster-5">
+              <img src="https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg" alt="" />
+            </div>
+            <div className="hero-poster hero-poster-6">
+              <img src="https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg" alt="" />
+            </div>
+            <div className="hero-poster hero-poster-7">
+              <img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" alt="" />
+            </div>
           </div>
-        </form>
+        </section>
 
         {error && (
           <div className="status status-error" role="alert">
@@ -388,7 +429,12 @@ export default function Home() {
           </div>
         )}
 
-        {loading && <div className="status status-loading">Loading playlist items…</div>}
+        {loading && (
+          <div className="status status-loading" role="status" aria-live="polite">
+            <span className="loading-triangle" aria-hidden="true">▲</span>
+            Loading playlist items…
+          </div>
+        )}
 
         {(['audio', 'video']).some((f) => downloads[`selected:${f}`]) && (
           <div className="bulk-progress" style={{ maxWidth: 720, margin: '0 auto 20px' }}>
@@ -407,6 +453,15 @@ export default function Home() {
                     <div className="progress-fill" style={{ width: `${state.percent || 0}%` }} />
                   </div>
                   {state.message && <p className="progress-note">{state.message}</p>}
+                  {running && (
+                    <button
+                      type="button"
+                      className="cancel-button progress-cancel"
+                      onClick={() => handleCancel(`selected:${format}`)}
+                    >
+                      Cancel download
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -478,15 +533,6 @@ export default function Home() {
                         <strong>{format === 'audio' ? 'All audio' : 'All video'}</strong>
                         <span>{phaseLabel(state.phase)}</span>
                         {running && <span>{state.percent}%</span>}
-                        {running && (
-                          <button
-                            type="button"
-                            className="cancel-button"
-                            onClick={() => handleCancel(`playlist:${format}`)}
-                          >
-                            Cancel
-                          </button>
-                        )}
                       </div>
                       {state.error ? (
                         <p className="progress-error">{state.error}</p>
@@ -502,6 +548,15 @@ export default function Home() {
                             {state.message}
                             {state.bytes ? ` · ${formatBytes(state.bytes)}` : ''}
                           </p>
+                          {running && (
+                            <button
+                              type="button"
+                              className="cancel-button progress-cancel"
+                              onClick={() => handleCancel(`playlist:${format}`)}
+                            >
+                              Cancel download
+                            </button>
+                          )}
                         </>
                       )}
 
@@ -604,6 +659,17 @@ export default function Home() {
               ))}
             </div>
 
+            <div style={{ maxWidth: 980, margin: '0 auto 12px', display: 'flex', justifyContent: 'flex-end' }}>
+              <input
+                type="search"
+                placeholder="Filter rows by title or channel…"
+                value={rowQuery}
+                onChange={(e) => { setRowQuery(e.target.value); setVisibleCount(pageSize); }}
+                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface)', color: 'var(--text)', width: '100%', maxWidth: 320 }}
+                aria-label="Filter rows"
+              />
+            </div>
+
             <div className="song-list" role="list" id="song-list-top">
               {current.items.map((video) => (
               <article className="song-row" key={video.id} role="listitem">
@@ -698,15 +764,6 @@ export default function Home() {
                                       state.phase === 'downloading' ? ` ${state.percent}%` : ''
                                     }`}
                           </span>
-                          {running && (
-                            <button
-                              type="button"
-                              className="cancel-button"
-                              onClick={() => handleCancel(`${video.id}:${format}`)}
-                            >
-                              Cancel
-                            </button>
-                          )}
                         </div>
                         {state.error ? (
                           <p className="progress-error">{state.error}</p>
@@ -721,6 +778,15 @@ export default function Home() {
                             {state.bytes ? (
                               <p className="progress-note">{formatBytes(state.bytes)}</p>
                             ) : null}
+                            {running && (
+                              <button
+                                type="button"
+                                className="cancel-button progress-cancel"
+                                onClick={() => handleCancel(`${video.id}:${format}`)}
+                              >
+                                Cancel download
+                              </button>
+                            )}
                           </>
                         )}
                       </div>
