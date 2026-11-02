@@ -58,8 +58,8 @@ export default function Home() {
   };
 
   const selectAllOnPage = () => {
-    setSelected((current) => {
-      const next = new Set(current);
+    setSelected((previous) => {
+      const next = new Set(previous);
       for (const video of current.items) next.add(video.id);
       return next;
     });
@@ -71,9 +71,52 @@ export default function Home() {
     if (!selected.size) return;
 
     const chosen = videos.filter((video) => selected.has(video.id));
+    const key = `selected:${format}`;
 
-    for (const video of chosen) {
-      handleSingleDownload(video, format);
+    updateDownload(key, { phase: 'queued', percent: 0, message: 'Starting…', error: '' });
+
+    try {
+      const jobId = await (async () => {
+        const response = await fetch('/api/download/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            playlistItems: chosen.map((v) => ({ id: v.id, title: v.title })),
+            title: 'Selected songs',
+            format,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error || 'Could not start the download');
+        return data.jobId;
+      })();
+
+      updateDownload(key, { jobId });
+
+      const poll = async () => {
+        const response = await fetch(`/api/download/status?jobId=${encodeURIComponent(jobId)}`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data?.error || 'Lost track of the download');
+        updateDownload(key, data);
+        if (data.phase === 'ready') {
+          const link = document.createElement('a');
+          link.href = `/api/download/file?jobId=${encodeURIComponent(jobId)}`;
+          link.download = data.fileName || 'selected.zip';
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          return;
+        }
+        if (data.phase === 'error' || data.phase === 'cancelled') return;
+        setTimeout(poll, 700);
+      };
+      poll();
+    } catch (err) {
+      updateDownload(key, {
+        phase: 'error',
+        error: err.message || 'The download failed',
+        message: 'Failed',
+      });
     }
   };
 
@@ -346,6 +389,29 @@ export default function Home() {
         )}
 
         {loading && <div className="status status-loading">Loading playlist items…</div>}
+
+        {(['audio', 'video']).some((f) => downloads[`selected:${f}`]) && (
+          <div className="bulk-progress" style={{ maxWidth: 720, margin: '0 auto 20px' }}>
+            {['audio', 'video'].map((format) => {
+              const state = downloads[`selected:${format}`];
+              if (!state) return null;
+              const running = state.phase !== 'ready' && state.phase !== 'error' && state.phase !== 'cancelled';
+              return (
+                <div key={format} className={`progress-block${state.phase === 'error' ? ' is-error' : ''}`}>
+                  <div className="progress-line">
+                    <strong>Selected {format}</strong>
+                    <span>{state.phase}</span>
+                    {running && <span>{state.percent}%</span>}
+                  </div>
+                  <div className="progress-track">
+                    <div className="progress-fill" style={{ width: `${state.percent || 0}%` }} />
+                  </div>
+                  {state.message && <p className="progress-note">{state.message}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {playlist && !loading && (
           <div className="summary">

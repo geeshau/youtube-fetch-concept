@@ -31,6 +31,13 @@ export default async function handler(
   const url = getText(body.url as string);
   const playlistId = getText(body.playlistId as string);
 
+  // Optional list of items provided directly (e.g. "selected rows" batch).
+  const providedItems = Array.isArray(body.playlistItems)
+    ? (body.playlistItems as { id?: string; title?: string }[])
+        .filter((it) => it && typeof it.id === 'string')
+        .map((it) => ({ id: String(it.id), title: String(it.title ?? it.id) }))
+    : [];
+
   // Optional cap on how many playlist items a batch job should download.
   const requestedLimit = Number(body.limit);
   const limit =
@@ -39,6 +46,22 @@ export default async function handler(
       : undefined;
 
   try {
+    if (providedItems.length > 0) {
+      // Direct batch mode: download the provided items into a single ZIP.
+      const items = limit ? providedItems.slice(0, limit) : providedItems;
+
+      if (!items.length) throw new Error('No videos selected to download.');
+
+      const job = await startDownloadJob({
+        playlistId: playlistId ?? `selected:${Date.now()}`,
+        playlistItems: items,
+        title,
+        format,
+      });
+
+      return res.status(202).json({ jobId: job.id, status: job.phase, count: items.length });
+    }
+
     if (playlistId) {
       // Batch mode: resolve the playlist, then download every item into a ZIP.
       const playlist = await fetchPlaylist(playlistId, { limit: 5000 });
