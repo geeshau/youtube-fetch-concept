@@ -1,7 +1,7 @@
 :root {
   --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f4f5f6;
+  --surface-2: #ffffff;
   --border: #e0e3e6;
   --text: #17191c;
   --muted: #626970;
@@ -238,7 +238,7 @@ body {
 
 .mode-toggle button.active {
   background: var(--accent);
-  color: #0b1117;
+  color: #fff;
   border-color: transparent;
 }
 
@@ -246,7 +246,7 @@ body {
   padding: 12px 24px;
   font-size: 15px;
   font-weight: 600;
-  color: #0b1117;
+  color: #fff;
   background: var(--accent);
   border: none;
   border-radius: 10px;
@@ -381,7 +381,7 @@ body {
 }
 
 .song-row:hover {
-  border-color: #39414f;
+  border-color: #aab2b9;
   transform: translateY(-1px);
 }
 
@@ -893,7 +893,7 @@ body {
 }
 
 .page-button.is-active {
-  color: #0b1117;
+  color: #fff;
   background: var(--accent);
   border-color: transparent;
   cursor: default;
